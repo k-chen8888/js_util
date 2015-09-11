@@ -7,22 +7,26 @@ var makeToast = function(options) {
 	var exports = {};
 	
 	// Create a DOM object for the toast and place it appropriately in the HTML file
+	// @param(where) is the location to prepend the toast to
 	// @param(classes) is a string that contains a space-delimited list of classes that the toast will take on (in addition to being of the "toast" class)
-	exports.obj = $('body').prepend('<div class="toast ' + (options.classes || 'plain"') + '></div>';
+	$(options.where || 'body').prepend( '<div class="toast ' + (options.classes + '"' || 'plain"') + '></div>' );
+	exports.obj = $('div.toast.' + (options.classes ? options.classes.split(' ').join('.') : 'plain') );
 	
 	// Add content to the DOM object
 	// @param(info) is an object that specifies the following:
-	//		@param(info.content) is the initial piece of content that appears inside the toast
-	//		@param(info.update) is a function that must occur at an interval and must take a toast object as its sole argument
+	//		@param(info.content) is the initial piece of content that appears inside the toast, which must be of the form <p id="content">content_here</p>
+	//		@param(info.update) is a function that must occur at an interval and must take a toast object as its sole argument... return the string to replace the text inside <p>
 	//		@param(info.updateTimer) is the amount of time to wait (in milliseconds) before the toast's content is edited by setIntterval
-	exports.obj.append(options.info.content || '<p>This is a plain piece of toast. Yummy.</p>');
-	// Can the content be updated?
-	// Note: This 
-	if (options.info.update) {
-		exports.updateContent = setInterval(function() {
-			options.info.update(exports);
-		}, (options.info.updateTimer || 1000), exports);
-	}
+	if (options.info) {
+	exports.obj.append(options.info.content || '<p id="content">This is a plain piece of toast. Yummy.</p>');
+		
+		// Can the content be updated?
+		if (options.info.update) {
+			exports.updateContent = setInterval(function() {
+				exports.obj.children('p#content').text(options.info.update());
+			}, (options.info.updateTimer || 1000), exports);
+		}
+	} else exports.obj.append('<p>This is a plain piece of toast. Yummy.</p>');
 	
 	// Can the toast be eaten (closed out)?
 	// @param(edible) is a function that defines behavior that occurs when the toast is eaten...
@@ -32,11 +36,11 @@ var makeToast = function(options) {
 	// If the toast can be closed out, add an 'x' button to it and set and event listener on that element
 	if (exports.eatToast) {
 		// Uses the HTML code for an 'x' button
-		exports.obj.append('<div id="close">&#10006;</div>');
+		exports.obj.append('<a id="close" href="#">&#10006;</a>');
 		
 		// Toast is eaten on close
-		exports.obj.children(".close").click(exports, function() {
-			exports.eatToast();
+		exports.obj.children('a#close').click(exports, function() {
+			exports.eatToast(exports);
 		});
 	}
 	
@@ -49,16 +53,15 @@ var makeToast = function(options) {
  */
 var eatToast = function(toast) {
 	// Fade to nothing
-	toast.obj.fadeTo(speed || 500, 0, function(){
-		$(target).css({'pointer-events': 'none'});
+	toast.obj.fadeTo(500, 0, function(){
+		toast.obj.css({'pointer-events': 'none'});
+		
+		// Stop the toast from updating itself
+		if (toast.updateContent) clearInterval(toast.updateContent);
+		
+		// Delete from tree
+		toast.obj.remove();
 	});
 	
-	// Stop the toast from updating itself
-	if (toast.updateContent) clearInterval(toast.updateContent);
-	
-	// Delete from tree
-	toast.obj.remove();
-	
-	// It's up to the user to save over the old toast with this value, so that eaten toast can never be used again
-	return false;
+	// The user now needs to remember that the old toast object can no longer be used
 };
