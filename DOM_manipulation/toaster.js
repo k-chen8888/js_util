@@ -14,16 +14,16 @@ var makeToast = function(options) {
 	
 	// Add content to the DOM object
 	// @param(info) is an object that specifies the following:
-	//		@param(info.content) is the initial piece of content that appears inside the toast, which must be of the form <p id="content">content_here</p>
-	//		@param(info.update) is a function that must occur at an interval and must take a toast object as its sole argument... return the string to replace the text inside <p>
+	//		@param(info.content) is the initial piece of content that appears inside the toast, which must have an id="content"
+	//		@param(info.update) is a function that must occur at an interval and must take the the element that it is meant to change as an argument
 	//		@param(info.updateTimer) is the amount of time to wait (in milliseconds) before the toast's content is edited by setIntterval
 	if (options.info) {
-	exports.obj.append(options.info.content || '<p id="content">This is a plain piece of toast. Yummy.</p>');
+		exports.obj.append(options.info.content || '<p id="content">This is a plain piece of toast. Yummy.</p>');
 		
 		// Can the content be updated?
 		if (options.info.update) {
 			exports.updateContent = setInterval(function() {
-				exports.obj.children('p#content').text(options.info.update());
+				options.info.update(exports.obj.children('#content'));
 			}, (options.info.updateTimer || 1000), exports);
 		}
 	} else exports.obj.append('<p>This is a plain piece of toast. Yummy.</p>');
@@ -53,7 +53,7 @@ var makeToast = function(options) {
  */
 var eatToast = function(toast) {
 	// Fade to nothing
-	toast.obj.fadeTo(500, 0, function(){
+	toast.obj.fadeTo(250, 0, function(){
 		toast.obj.css({'pointer-events': 'none'});
 		
 		// Stop the toast from updating itself
