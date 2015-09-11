@@ -15,7 +15,7 @@ var makeToast = function(options) {
 	//		@param(info.content) is the initial piece of content that appears inside the toast
 	//		@param(info.update) is a function that must occur at an interval and must take a toast object as its sole argument
 	//		@param(info.updateTimer) is the amount of time to wait (in milliseconds) before the toast's content is edited by setIntterval
-	exports.obj.append(options.info.content || 'This is a plain piece of toast. Yummy.');
+	exports.obj.append(options.info.content || '<p>This is a plain piece of toast. Yummy.</p>');
 	// Can the content be updated?
 	// Note: This 
 	if (options.info.update) {
