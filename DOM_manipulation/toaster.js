@@ -1,0 +1,64 @@
+/* Generates a stylized alert <div> (toast) at a target location
+ * Saves toast as a JavaScript object
+ * 
+ * Note that users must style their toasts themselves
+ */
+var makeToast = function(options) {
+	var exports = {};
+	
+	// Create a DOM object for the toast and place it appropriately in the HTML file
+	// @param(classes) is a string that contains a space-delimited list of classes that the toast will take on (in addition to being of the "toast" class)
+	exports.obj = $('body').prepend('<div class="toast ' + (options.classes || 'plain"') + '></div>';
+	
+	// Add content to the DOM object
+	// @param(info) is an object that specifies the following:
+	//		@param(info.content) is the initial piece of content that appears inside the toast
+	//		@param(info.update) is a function that must occur at an interval and must take a toast object as its sole argument
+	//		@param(info.updateTimer) is the amount of time to wait (in milliseconds) before the toast's content is edited by setIntterval
+	exports.obj.append(options.info.content || 'This is a plain piece of toast. Yummy.');
+	// Can the content be updated?
+	// Note: This 
+	if (options.info.update) {
+		exports.updateContent = setInterval(function() {
+			options.info.update(exports);
+		}, (options.info.updateTimer || 1000), exports);
+	}
+	
+	// Can the toast be eaten (closed out)?
+	// @param(edible) is a function that defines behavior that occurs when the toast is eaten...
+	//		Set this to false to make the toast inedible (cannot be destroyed)
+	//		Set this to undefined to make the toast exhibit default behavior on destruction
+	exports.eatToast = ( options.edible === false ? false : ( typeof options.edible == 'function' ? options.edible : function(exports) { eatToast(exports); } ) );
+	// If the toast can be closed out, add an 'x' button to it and set and event listener on that element
+	if (exports.eatToast) {
+		// Uses the HTML code for an 'x' button
+		exports.obj.append('<div id="close">&#10006;</div>');
+		
+		// Toast is eaten on close
+		exports.obj.children(".close").click(exports, function() {
+			exports.eatToast();
+		});
+	}
+	
+	return exports;
+};
+
+
+/* Erases a toast from the DOM tree
+ * Like, completely... fade out, get rid of all setTimeout(), and delete
+ */
+var eatToast = function(toast) {
+	// Fade to nothing
+	toast.obj.fadeTo(speed || 500, 0, function(){
+		$(target).css({'pointer-events': 'none'});
+	});
+	
+	// Stop the toast from updating itself
+	if (toast.updateContent) clearInterval(toast.updateContent);
+	
+	// Delete from tree
+	toast.obj.remove();
+	
+	// It's up to the user to save over the old toast with this value, so that eaten toast can never be used again
+	return false;
+};
