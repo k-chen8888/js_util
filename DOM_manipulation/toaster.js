@@ -48,6 +48,40 @@ var makeToast = function(options) {
 };
 
 
+/* Refreshes a stale piece of toast with new information, giving it new life and flavor
+ */
+var reToast = function(stale, options) {
+	// @param(classchange) contains 2 arrays, one of old classes and another of new classes
+	stale.obj.removeClass(options.classchange[0].join(' '));
+	stale.obj.addClass(options.classchange[1].join(' '));
+	
+	// @param(info) updates the content
+	if (options.info) {
+		stale.obj.append(options.info.content || '<p id="content">I\'m tasty again!</p>');
+		
+		// Can the content be updated?
+		if (options.info.update) {
+			stale.updateContent = setInterval(function() {
+				options.info.update(stale.obj.children('#content'));
+			}, (options.info.updateTimer || 1000), stale);
+		}
+	} else stale.obj.append('<p>I\'m tasty again!</p>');
+	
+	// @param(edible) defines how the toast gets eaten
+	stale.eatToast = ( options.edible === false ? false : ( typeof options.edible == 'function' ? options.edible : function(stale) { eatToast(stale); } ) );
+	// If the toast can be closed out, add an 'x' button to it and set and event listener on that element
+	if (stale.eatToast) {
+		// Uses the HTML code for an 'x' button
+		stale.obj.append('<a id="close" href="#">&#10006;</a>');
+		
+		// Toast is eaten on close
+		stale.obj.children('a#close').click(stale, function() {
+			stale.eatToast(stale);
+		});
+	}
+};
+
+
 /* Erases a toast from the DOM tree
  * Like, completely... fade out, get rid of all setTimeout(), and delete
  */
